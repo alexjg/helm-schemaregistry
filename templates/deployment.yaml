@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+          env:
+            - name: SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL
+              value: {{ .Values.kafkaZookeeperUrl }}
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              value: {{ template "fullname" . }}
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: http://0.0.0.0:{{ .Values.service.internalPort }}
